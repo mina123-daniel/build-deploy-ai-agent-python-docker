@@ -1,0 +1,64 @@
+services: # docker compose expects
+  backend: # custom key name 
+    # image: python:latest
+    build:
+      # location of dockerfile 
+      context: ./backend
+      # name of dockerfile
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8000
+    # main:app ===> that app is related the app inside main.py 
+    # host 0.0.0.0 ===> to be able to publish 
+    # we can add --reload if we need to update the page withoud rebuild the container
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 
+    # I comment that volumes 
+    # because I need to remove the folder __pycache__ 
+    # and keep all folder in container "/app"
+    volumes:
+      # path to the src files : path to workdir
+      - ./backend/src:/app
+    
+    develop:
+      watch:
+      # if we update something in requirements.txt/Dockerfile 
+      # then we need to compose down then build
+      # but those actions do the rebuild if something change
+        - action: rebuild
+          path: backend/requirments.txt
+        - action: rebuild
+          path: backend/Dockerfile
+        # comment these lines then you have to
+        # added --reload @ command step to reload the page
+        - action: restart
+          path: backend/src/
+
+        # 1-I added these steps becaue ther is a folder __pycache__ exist
+        # on my machine and I don't need it in my machine I need it on 
+        # container 
+        # 2-also sync action is like to sync the local env with the container 
+        # that why we remove the volumes: steps 
+        # 3-also sync do sync with all folders mention in yaml file 
+        # So if you create a new folder doesn't mention here then it will not find 
+        # it on container
+        # 4-we don't prefer sync because if you create a folder on container 
+        # it willnot appear on your machine that's why we use volumes instead of sync 
+        
+        # - action: sync
+        #   path: backend/src/
+        #   target: /app
+
+  static_html: # custom key name 
+    # image: python:latest
+    build:
+      # location of dockerfile 
+      context: ./static_html
+      # name of dockerfile
+      dockerfile: static.Dockerfile
+    ports:
+      - 8000:8000
+      - 3000:8000
+    command: python -m http.server 8000
+    volumes:
+      # path to the src files : path to workdir
+      - ./static_html/src:/app
