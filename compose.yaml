@@ -12,7 +12,12 @@ services: # docker compose expects
     # host 0.0.0.0 ===> to be able to publish 
     # we can add --reload if we need to update the page withoud rebuild the container
     command: uvicorn main:app --host 0.0.0.0 --port 8000 
-    # I comment that volumes 
+    environment:
+      - PORT=8000
+      - MY_PROJECT=Hello World
+    env_file:
+      - .env.sample
+    # you can comment that volumes 
     # because I need to remove the folder __pycache__ 
     # and keep all folder in container "/app"
     volumes:
